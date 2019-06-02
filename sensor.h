@@ -13,10 +13,11 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
-#ifndef STATE_STRUCT_H
-#define STATE_STRUCT_H
-#include "state_struct.h"
+#ifndef COMMON_DEFINITIONS_H
+#define COMMON_DEFINITIONS_H
+#include "common_definitions.h"
 #endif
+
 #include "Arduino.h"
 
 class sensor{

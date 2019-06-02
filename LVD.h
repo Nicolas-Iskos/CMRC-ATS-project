@@ -5,9 +5,9 @@
  * a future state given a current state
  */
 
-#ifndef STATE_STRUCT_H
-#define STATE_STRUCT_H
-#include "state_struct.h"
+#ifndef COMMON_DEFINITIONS_H
+#define COMMON_DEFINITIONS_H
+#include "common_definitions.h"
 #endif
 
 #ifndef LVD_H
@@ -19,19 +19,11 @@
 
 class LVD{
   private:
-  double m, fin_wid, rocket_rad;
+  double m, flap_width, body_rad, n_flaps;
   double g, ro, MATH_PI;
   double apo_goal, dt;
 
-  /** 
-   * Coefficient of Drag (CD):
-   * CD_total = w0 + (wd1 * d) + (wd2 * d^2) + (wd3 * d^3) + (wd4 * d^4)
-   */
-  double w0;
-  double wd1;
-  double wd2;
-  double wd3;
-  double wd4;
+  double drag_model[N_D_IMPACTORS][N_D_COEFF_TERMS];
 
   public:
 
@@ -40,7 +32,10 @@ class LVD{
    * attributes of the CMRC SCOTTIE launch vehicle, used in the 2019 
    * NASA SL competition
    */
-  LVD();
+  LVD(double m, double fin_width, double body_rad, double n_flaps,
+      double drag_model[][N_D_COEFF_TERMS],
+      double g, double ro,
+      double apo_goal, double dt);
 
   /**
    * computes the coefficient of the launch vehicle as a function
@@ -92,6 +87,8 @@ class LVD{
 
   /* returns the target apogee */
   double get_apo_goal();
+
+  double d_coeff_dot_product(double coeffs[], double powers[]);
 };
 
 #endif

@@ -48,14 +48,9 @@
 
 
 // include struct declarations
-#ifndef STATE_STRUCT_H
-#define STATE_STRUCT_H
-#include <state_struct.h>
-#endif
-
-#ifndef ERROR_STRUCT_H
-#define ERROR_STRUCT_H
-#include <error_struct.h>
+#ifndef COMMON_DEFINITIONS_H
+#define COMMON_DEFINITIONS_H
+#include <common_definitions.h>
 #endif
 
 //include control system libraries
@@ -76,8 +71,6 @@
 #include <SD.h>
 
 //---------------------------------------------------------------------------------------------------
-
-#define SAMPLE_T         0.520
 #define TCAADDR          0x70
 
 #define FULL_E           154.69
@@ -94,8 +87,20 @@
 //---------------------------------------------------------------------------------------------------
 
 // prediction and control class initialization
-LVD r = LVD();
-pi_controller c = pi_controller(1.E-5,2.E-4);
+
+double drag_model[N_D_IMPACTORS][N_D_COEFF_TERMS] = 
+{ {0.4298,0,0,0,0}, {1.1299,-6.948,76.458,0,0}, {0,0,0,0,0} };
+
+LVD r = LVD(1.4966, 0.125, 0.2570, 3,
+            drag_model,
+            32., 0.00237,
+            5100., 0.104);
+
+double servo_ext_model[N_SERVO_COEFFS] = 
+{1.5708, 5.299, -1.757, 900.8, -3481, -4.481e+5, 
+ 4.261e+6, 6.36e+7, -1.077e+9, 3.967e+9};
+ 
+pi_controller c = pi_controller(1.E-5, 2.E-4, servo_ext_model, 0.125);
 
 // sensor data class initialization
 sensor s = sensor();
@@ -282,7 +287,7 @@ void loop() {
   /* if we have found several states to have a velocity less than 0,
    *  we determine that apogee has occurred
    */
-  if(apogee_reached < MIN_N_NEGATIVE_V){
+  if(n_negative_v < MIN_N_NEGATIVE_V){
     start_time = millis();
     
     // read sensors
@@ -305,7 +310,7 @@ void loop() {
 
     // retract flaps if apogee is reached
     if(X_t->velocity < 0){
-      apogee_reached+=1;
+      n_negative_v+=1;
     }
 
     // make a prediction of apogee

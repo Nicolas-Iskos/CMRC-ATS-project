@@ -1,16 +1,15 @@
 #include "sensor.h"
-#define SAMPLE_T 0.520
 
 sensor::sensor(){
   offset = 0;
 }
 
 void sensor::zero_altimeters(double a1, double a2, double a3, double a4){
-  offset = (a1 + a2 + a3 + a4)/4;
+  offset = (a1 + a2 + a3 + a4)/N_ALTIMETERS;
 }
 
 double sensor::get_vertical_speed(state_t X_tm1, double a1, double a2, 
-													double a3, double a4){
+								  double a3, double a4){
 	/**
 	 * We compute our current speed and last speed to measure acceleration. This
 	 * acceleration value is used to correct for the error in the velocity
@@ -30,7 +29,7 @@ double sensor::get_altitude(state_t X_tm1, double a1, double a2, double a3, doub
 	 * term that accounts for the fact that the altimeters are averaging over
 	 * the period of SAMPLE_T.
 	 */
-	return ((a1 + a2 + a3 + a4)/4 - offset) + X_tm1->velocity*SAMPLE_T/2;
+	return ((a1 + a2 + a3 + a4)/N_ALTIMETERS - offset) + X_tm1->velocity*SAMPLE_T/2;
 }
 
 double sensor::get_polar_angle(double t3_y, double t3_z){

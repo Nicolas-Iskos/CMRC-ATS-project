@@ -15,29 +15,48 @@
 #include "LVD.h"
 #include <math.h>
 
-LVD::LVD(){
-    // constant system parameters
-    m = 1.4966;
-    fin_wid = 0.125;
-    rocket_rad = 0.2570;
+LVD::LVD(double m_in, double flap_width_in, double body_rad_in, double n_flaps_in,
+         double drag_model_in[][N_D_COEFF_TERMS],
+         double g_in, double ro_in,
+         double apo_goal_in, double dt_in)
+{
+    m = m_in;
+    flap_width = flap_width_in;
+    body_rad = body_rad_in;
+    n_flaps = n_flaps_in;
 
-    // constant physical parameters
-    g = 32.;
-    ro = 0.00237; // slugs/ft3
+    for(int i = 0; i < N_D_COEFF_TERMS; i++)
+    {
+        for(int j = 0; j < N_D_IMPACTORS; j++)
+        {
+            drag_model[i][j] = drag_model_in[i][j];
+        }
+    }
 
-    // constant general prediction parameters
-    apo_goal = 5100.;
-    dt = 0.104;
+    g = g_in;
+    ro = ro_in;
 
-    w0 = 0.4298;
-    wd1 = 1.1299;
-    wd2 = -6.948;
-    wd3 = 76.458;
+    apo_goal = apo_goal_in;
+    dt = dt_in;
 }
 
 double LVD::compute_cd(state_t X_t, double U_t){
     double v1 = X_t->velocity;
-    return w0 + wd1 * pow(U_t,2) + wd2 * pow(U_t,3) + wd3 * pow(U_t,4);
+    double u1 = U_t;
+
+    double u_powers[N_D_COEFF_TERMS];
+    double v_powers[N_D_COEFF_TERMS];
+
+    for(int i = 0; i < N_D_COEFF_TERMS; i++)
+    {
+        u_powers[i] = pow(u1,i+1);
+        v_powers[i] = pow(v1,i+1);
+    }
+
+    return
+    drag_model[STATIC_COEFF][0] + 
+    d_coeff_dot_product(drag_model[FLAP_COEFF], u_powers) +
+    d_coeff_dot_product(drag_model[V_COEFF], v_powers);
 }
 
 double LVD::compute_fd(state_t X_t, double U_t){
@@ -56,8 +75,8 @@ double LVD::compute_fd(state_t X_t, double U_t){
 }
 
 double LVD::compute_area(double U_t){
-    double area_flaps = 3 * fin_wid * U_t;
-    double area_rocket = M_PI * rocket_rad * rocket_rad;
+    double area_flaps = n_flaps * flap_width * U_t;
+    double area_rocket = M_PI * pow(body_rad,2);
     return area_flaps + area_rocket;
 }
 
@@ -100,5 +119,20 @@ void LVD::ms_predict(state_t X_t, state_t X_tp, double U_t){
 }
 
 double LVD::get_apo_goal(){
-  return apo_goal;
+    return apo_goal;
 }
+
+double LVD::d_coeff_dot_product(double coeffs[], double powers[])
+{
+    double result = 0;
+
+    for(int i = 0; i < N_D_COEFF_TERMS; i++)
+    {
+        result += coeffs[i] * powers[i];
+    }
+
+    return result;
+}
+
+
+

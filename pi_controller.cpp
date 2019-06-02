@@ -2,45 +2,64 @@
 #include <math.h>
 
 
-pi_controller::pi_controller(double p_arg, double i_arg){
+pi_controller::pi_controller(double p_arg, double i_arg, double flap_length_in){
     p = p_arg;
     i = i_arg;
-
-    rt0 = 1.5708;
-    rt1 = 5.299;
-    rt2 = -1.757;
-    rt3 = 900.8;
-    rt4 = -3481;
-    rt5 = -4.481e+05;
-    rt6 = 4.261e+06;
-    rt7 = 6.36e+07;
-    rt8 = -1.077e+09;
-    rt9 = 3.967e+09;
+    flap_length = flap_length_in;
 }
 
-double pi_controller::get_extension(error_t e){
-  double p_o = p * e->inst + i * e->acc;
-  if(p_o < 0.) p_o = 0.;
-  if(p_o > 0.125) p_o = .125;
+pi_controller::pi_controller(double p_in, double i_in, double servo_ext_model_in[],
+                             double flap_length_in)
+{
+    p = p_in;
+    i = i_in;
 
-  return p_o;
+    for(int i = 0; i < N_SERVO_COEFFS; i++)
+    {
+        servo_ext_model[i] = servo_ext_model_in[i];
+    }
+
+    flap_length = flap_length_in;
+}
+
+
+
+double pi_controller::get_extension(error_t e){
+    double p_o = p * e->inst + i * e->acc;
+    if(p_o < 0.) p_o = 0.;
+    if(p_o > flap_length) p_o = flap_length;
+
+    return p_o;
 }
 
 double pi_controller::get_theta(error_t e){
-    double output;
-
     // current extension
     double p_o = get_extension(e);
+    double powers[N_SERVO_COEFFS];
+    for(int i = 0; i < N_SERVO_COEFFS; i++)
+    {
+        powers[i] = pow(p_o,i);
+    }
     
     /** 
-     * we use the current flap extension and a polynomial fit of the
-     * equation of angle as a function of distance to calculate the
-     * appropriate servo angle
+     * we use the current flap extension and a 10-degree polynomial fit 
+     * of the equation of angle as a function of distance to calculate 
+     * the appropriate servo angle
      */
-    output = 
-    (180/M_PI)*(rt9 * pow(p_o,9) + rt8 * pow(p_o,8) rt7 * pow(p_o,7)
-    +rt6 * pow(p_o,6) + rt5 * pow(p_o,5) + rt4 * pow(p_o,4)
-    +rt3 * pow(p_o,3) + rt2 * pow(p_o,2) + rt1 * p_o + rt0);
-
-    return output;
+    return (180/M_PI) * servo_ext_dot_product(servo_ext_model, powers);
 }
+
+double pi_controller::servo_ext_dot_product(double coeffs[], double powers[])
+{
+    double result = 0;
+
+    for(int i = 0; i < N_SERVO_COEFFS; i++)
+    {
+        result += servo_ext_model[i] * powers[i];
+    }
+
+    return result;
+}
+
+
+
