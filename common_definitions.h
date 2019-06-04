@@ -1,3 +1,8 @@
+/* #include "Arduino.h" */
+#include <math.h>
+
+#define N_STATE_TYPES      3
+
 #define N_D_IMPACTORS      3
 #define N_D_COEFF_TERMS    5
 
@@ -11,11 +16,7 @@
 
 #define SAMPLE_T           0.520
 
-/**
- * This file contains the struct representing
- * the state of the launch vehicle. It is used
- * globally in the ATS project.
- */
+
 
 struct state {
 	double velocity;
@@ -25,15 +26,11 @@ struct state {
 
 typedef struct state* state_t;
 
-/**
- * This file contains the struct representing
- * the error on apogee detected by the ATS.
- * It is used globally in the ATS project.
- */
-
 struct error {
 	double inst;
 	double acc;
 };
 
 typedef struct error* error_t;
+
+typedef double control_t;

@@ -1,5 +1,4 @@
 #include "pi_controller.h"
-#include <math.h>
 
 
 pi_controller::pi_controller(double p_arg, double i_arg, double flap_length_in){
@@ -24,21 +23,26 @@ pi_controller::pi_controller(double p_in, double i_in, double servo_ext_model_in
 
 
 
-double pi_controller::get_extension(error_t e){
-    double p_o = p * e->inst + i * e->acc;
-    if(p_o < 0.) p_o = 0.;
-    if(p_o > flap_length) p_o = flap_length;
+control_t pi_controller::get_control(error_t e){
+    control_t U_t = p * e->inst + i * e->acc;
+    
+    if(U_t < 0.){
+        U_t = 0.;
+    }
+    if(U_t > flap_length){
+        U_t = flap_length;
+    }
 
-    return p_o;
+    return U_t;
 }
 
 double pi_controller::get_theta(error_t e){
     // current extension
-    double p_o = get_extension(e);
+    control_t U_t = get_control(e);
     double powers[N_SERVO_COEFFS];
     for(int i = 0; i < N_SERVO_COEFFS; i++)
     {
-        powers[i] = pow(p_o,i);
+        powers[i] = pow(U_t,i);
     }
     
     /** 

@@ -18,7 +18,6 @@
 #include "common_definitions.h"
 #endif
 
-#include "Arduino.h"
 
 class sensor{
   private:

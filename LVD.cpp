@@ -13,7 +13,7 @@
  */
 
 #include "LVD.h"
-#include <math.h>
+
 
 LVD::LVD(double m_in, double flap_width_in, double body_rad_in, double n_flaps_in,
          double drag_model_in[][N_D_COEFF_TERMS],
@@ -40,9 +40,9 @@ LVD::LVD(double m_in, double flap_width_in, double body_rad_in, double n_flaps_i
     dt = dt_in;
 }
 
-double LVD::compute_cd(state_t X_t, double U_t){
+double LVD::compute_cd(state_t X_t, control_t U_t){
     double v1 = X_t->velocity;
-    double u1 = U_t;
+    control_t u1 = U_t;
 
     double u_powers[N_D_COEFF_TERMS];
     double v_powers[N_D_COEFF_TERMS];
@@ -59,7 +59,7 @@ double LVD::compute_cd(state_t X_t, double U_t){
     d_coeff_dot_product(drag_model[V_COEFF], v_powers);
 }
 
-double LVD::compute_fd(state_t X_t, double U_t){
+double LVD::compute_fd(state_t X_t, control_t U_t){
     double area = compute_area(U_t);
     
     double vy = X_t->velocity;
@@ -74,13 +74,13 @@ double LVD::compute_fd(state_t X_t, double U_t){
     return compute_cd(X_t, U_t) * 0.5 * ro * area * v2;
 }
 
-double LVD::compute_area(double U_t){
+double LVD::compute_area(control_t U_t){
     double area_flaps = n_flaps * flap_width * U_t;
     double area_rocket = M_PI * pow(body_rad,2);
     return area_flaps + area_rocket;
 }
 
-void LVD::ss_predict(state_t X_t, state_t X_tp, double U_t){
+void LVD::ss_predict(state_t X_t, state_t X_tp, control_t U_t){
     double theta = X_t->theta;
     double vy = X_t->velocity;
     double vx = vy * tan(theta);
@@ -104,7 +104,7 @@ void LVD::ss_predict(state_t X_t, state_t X_tp, double U_t){
     X_tp->theta = atan(vx_p/vy_p);
 }
 
-void LVD::ms_predict(state_t X_t, state_t X_tp, double U_t){
+void LVD::ms_predict(state_t X_t, state_t X_tp, control_t U_t){
     X_tp->velocity = X_t->velocity;
     X_tp->altitude = X_t->altitude;
     X_tp->theta = X_t->theta;

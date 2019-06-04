@@ -14,9 +14,6 @@
 #define LVD_H
 
 
-#include "Arduino.h"
-
-
 class LVD{
   private:
   double m, flap_width, body_rad, n_flaps;
@@ -41,19 +38,19 @@ class LVD{
    * computes the coefficient of the launch vehicle as a function
    * of the current state and current control
    */
-  double compute_cd(state_t X_t, double U_t);
+  double compute_cd(state_t X_t, control_t U_t);
 
   /**
    * computes the force of drag acting on the launch vehicle
    * as a function of the current state and control
    */
-  double compute_fd(state_t X_t, double U_t);
+  double compute_fd(state_t X_t, control_t U_t);
 
   /** 
    * returns the cross sectional area of the launch vehicle
    * based on the current level of flap extension
    */
-  double compute_area(double U_t);
+  double compute_area(control_t U_t);
   
   /**
    * This function takes a current state and then 
@@ -68,7 +65,7 @@ class LVD{
    * Outputs:
    *  None 
    */
-  void ss_predict(state_t X_t, state_t X_tp, double U_t);
+  void ss_predict(state_t X_t, state_t X_tp, control_t U_t);
 
    /**
    * This function takes a current state and then 
@@ -83,7 +80,7 @@ class LVD{
    * Outputs:
    *  None 
    */
-  void ms_predict(state_t X_t, state_t X_tp, double U_t);
+  void ms_predict(state_t X_t, state_t X_tp, control_t U_t);
 
   /* returns the target apogee */
   double get_apo_goal();

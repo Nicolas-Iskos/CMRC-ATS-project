@@ -17,7 +17,6 @@
 #include "common_definitions.h"
 #endif
 
-#include "Arduino.h"
 
 class pi_controller{
 private:
@@ -56,7 +55,7 @@ public:
      * Outputs:
      * 	The appropriate distance of flap extension
      */
-    double get_extension(error_t e);
+    control_t get_control(error_t e);
     
     /**
      * The CMRC SCOTTIE launch vehicle uses a servo 
