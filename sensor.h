@@ -13,9 +13,9 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
-#ifndef COMMON_DEFINITIONS_H
-#define COMMON_DEFINITIONS_H
-#include "common_definitions.h"
+#ifndef ATS_INT_H
+#define ATS_INT_H
+#include "ATS_int.h"
 #endif
 
 

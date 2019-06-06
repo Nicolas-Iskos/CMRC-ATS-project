@@ -1,9 +1,11 @@
 #include "mex.h"
 #include <cstdlib>
+#include <sstream>
+#include "stdlib.h"
 
-#ifndef COMMON_DEFINITIONS_H
-#define COMMON_DEFINITIONS_H
-#include "common_definitions.h"
+#ifndef ATS_INT_H
+#define ATS_INT_H
+#include "ATS_int.h"
 #endif
 
 #include "LVD.h"
@@ -11,6 +13,7 @@
 #include "sensor.h"
 
 #define N_STATES_IN_FLIGHT    1000
+
 
 void run_simulation_routine(double *phys_consts, double *init_conditions,
                 double *noise,
@@ -28,8 +31,8 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
     double h0 = init_conditions[1];
     double th0 = init_conditions[2];
     
-    double snr_alt = noise[0];
-    double snr_imu = noise[1];
+    double inv_snr_alt = noise[0];
+    double inv_snr_imu = noise[1];
     
     double p = control_terms[0];
     double i = control_terms[1];
@@ -108,24 +111,31 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
     /* At this point, the ATS simulation loop starts. It will
      continuously make predictions of apogee and enact control
      on this prediction at time */
-    while(X_t->velocity > 0)
-    {
+
+    while(X_t->velocity > 0){
+        
         /* we take advantage of the single step predict function
          * to simulate the next state of the launch vehicle
+         * a time SAMPLE_T into the future
          */
-        r.ss_predict(X_t, X_t, U_t);
+        for(int i = 0; i < lround(SAMPLE_T/dt); i++){
+            r.ss_predict(X_t, X_t, U_t);
+        }
         
         /* build the observed state taking noise into account and
          * recognizing that velocity is calculated using the technique
          * of finite differences
          */
         X_to->altitude = 
-        X_t->altitude + X_t->altitude * (1 / snr_alt) * (2 * rand() - 1);
-
-        X_to->velocity = (X_to->altitude - X_tm1o->altitude) / dt;
+        X_t->altitude + 
+        X_t->altitude * inv_snr_alt * (2 * (double)rand()/RAND_MAX - 1);
+        
+        X_to->velocity = s.get_vertical_speed(X_tm1o,
+        X_to->altitude, X_to->altitude, X_to->altitude, X_to->altitude);
 
         X_to->theta = 
-        X_t->theta + X_t->theta * (1 / snr_imu) * (2 * rand() - 1);
+        X_t->theta + 
+        X_t->theta * inv_snr_imu * (2 * (double)rand()/RAND_MAX - 1);
         
         /* make a prediction of apogee based on control and observed 
          * state */
@@ -137,27 +147,31 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
         
         /* enact control based on predicted error on apogee */
         U_t = c.get_control(e);
-        
+
         /* set past observed state for next loop iteration */
-        X_tm1o = X_to;
-        
+        X_tm1o->altitude = X_to->altitude;
+        X_tm1o->velocity = X_to->velocity;
+        X_tm1o->theta = X_to->theta;
         
         /* record control, prediction, observed state and actual state */
+        
         actual_states[N_STATE_TYPES * state_counter] = X_t->velocity;
         actual_states[N_STATE_TYPES * state_counter + 1] = X_t->altitude;
         actual_states[N_STATE_TYPES * state_counter + 2] = X_t->theta;
-        
+
         obs_states[N_STATE_TYPES * state_counter] = X_to->velocity;
         obs_states[N_STATE_TYPES * state_counter + 1] = X_to->altitude;
         obs_states[N_STATE_TYPES * state_counter + 2] = X_to->theta;
-        
+
         pred_states[N_STATE_TYPES * state_counter] = X_tf->velocity;
         pred_states[N_STATE_TYPES * state_counter + 1] = X_tf->altitude;
         pred_states[N_STATE_TYPES * state_counter + 2] = X_tf->theta;
-                
+
         controls[state_counter] = U_t;
-        
+
         *apo_achieved = X_tf->altitude;
+        
+        state_counter++;
     }
     
     delete X_t;
@@ -202,8 +216,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
                        noise,
                        vehicle_params, drag_model,
                        control_terms, pred_params,
-                       pred_states, controls, 
-                       actual_states, obs_states,
+                       pred_states, actual_states, 
+                       obs_states, controls,
                        apogee_achieved);
 }
 

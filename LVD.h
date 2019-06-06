@@ -5,13 +5,13 @@
  * a future state given a current state
  */
 
-#ifndef COMMON_DEFINITIONS_H
-#define COMMON_DEFINITIONS_H
-#include "common_definitions.h"
-#endif
-
 #ifndef LVD_H
 #define LVD_H
+
+#ifndef ATS_INT_H
+#define ATS_INT_H
+#include "ATS_int.h"
+#endif
 
 
 class LVD{

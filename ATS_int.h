@@ -14,7 +14,7 @@
 
 #define N_ALTIMETERS       4
 
-#define SAMPLE_T           0.520
+#define SAMPLE_T           0.104
 
 
 

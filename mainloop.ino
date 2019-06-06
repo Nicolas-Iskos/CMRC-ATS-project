@@ -48,9 +48,9 @@
 
 
 // include struct declarations
-#ifndef COMMON_DEFINITIONS_H
-#define COMMON_DEFINITIONS_H
-#include <common_definitions.h>
+#ifndef ATS_INT_H
+#define ATS_INT_H
+#include <ATS_int.h>
 #endif
 
 //include control system libraries
@@ -322,7 +322,7 @@ void loop() {
     e->acc += e_t;
 
     // calculate control
-    U_t = c.get_extension(e);
+    U_t = c.get_control(e);
     // enact control
     control_servo.write(c.get_theta(e));
 
