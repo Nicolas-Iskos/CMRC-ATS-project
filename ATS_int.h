@@ -1,4 +1,7 @@
-/* #include "Arduino.h" */
+
+
+
+/* #include "Arduino.h" */ // uncomment this line to compile for Arduino
 #include <math.h>
 
 #define N_STATE_TYPES      3
@@ -15,6 +18,7 @@
 #define N_ALTIMETERS       4
 
 #define SAMPLE_T           0.104
+#define DT                 0.0208
 
 
 

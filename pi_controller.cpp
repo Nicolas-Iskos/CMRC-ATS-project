@@ -37,7 +37,7 @@ control_t pi_controller::get_control(error_t e){
 }
 
 double pi_controller::get_theta(error_t e){
-    // current extension
+    /* current extension */
     control_t U_t = get_control(e);
     double powers[N_SERVO_COEFFS];
     for(int i = 0; i < N_SERVO_COEFFS; i++)

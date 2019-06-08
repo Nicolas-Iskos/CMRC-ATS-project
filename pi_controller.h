@@ -5,8 +5,6 @@
  * as functions that can be used to determine the appropriate 
  * control for a given error.
  *
- * Units:
- * feet, slugs, seconds
  */
 
 #ifndef PI_CONTROLLER_H

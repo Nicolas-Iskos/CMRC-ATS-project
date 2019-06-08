@@ -1,3 +1,79 @@
+/* Overview:
+ *
+ * The contents of this file are a simulation routine for the CMRC ATS
+ * library. The simulation routine simulates the completion of one 
+ * flight from the time the ATS is activated until apogee. 
+ *
+ *
+ *
+ * IO:
+ *
+ * Inputs:
+ *
+ * phys_consts : An array as follows:
+ * [gravitational constant, air density]
+ *
+ * init_conditions : An array as follows:
+ * [initial velocity, initial altitude, initial polar angle]
+ *
+ * noise : An array as follows:
+ * [inverse snr on altimeters, inverse snr on inertial measurement unit]
+ *
+ * vehicle_params : An array as follows:
+ * [mass, flap width, flap length, body radius, number of flaps]
+ *
+ * drag_model : An array as follows:
+ * [base case drag coeff;
+ * [drag coeff contribution of jth power of flap extension;
+ * [drag coeff contribution of jth power of vertical velocity] 
+ *
+ * control_terms : An array as follows:
+ * [proportional gain, integral gain]
+ *
+ * pred_params : target apogee
+ *  
+ *
+ * Outputs:
+ *
+ * pred_states : array of the predicted states at apogee
+ *
+ * actual_states : array of the states achieved over flight
+ *
+ * obs_states : array of the observed states achieved over flight
+ *
+ * controls : array of the flap extensions achieved over flight
+ *
+ * apo_achieved : the apogee achieved at the end of the flight
+ *
+ *
+ *
+ * How to run the simulation:
+ *
+ * This is a MATLAB-C++ mex file. With this file, it is possible to
+ * test the C++ ATS library using an efficient and modular MATLAB 
+ * interface. Compile this file by executing the following command from 
+ * the MATLAB command line.
+ *
+ * mex simulation_routine.cpp LVD.cpp pi_controller.cpp sensor.cpp -R2018a
+ *
+ * Now, it is possible to call mexFunction from a MATLAB script using the 
+ * syntax 
+ * 
+ * simulation_routine(phys_consts, init_conditions, ...
+ *                    noise, ...
+ *                    vehicle_params, drag_model, ...
+ *                    control_terms, pred_params);
+ * 
+ * After the previous command calls the gateway function mexFunction with
+ * the appropriate input arguments, the simulation function 
+ * run_simulation_routine is called. This function performs the simulation
+ * and returns its results to mexFunction. mexFunction then passes the
+ * results back to the MATLAB script that called simulation_routine. 
+ * 
+ * The repository's included file run_simulation.m gives an example of
+ * how to use this test environment.
+ */
+
 #include "mex.h"
 #include <cstdlib>
 #include <sstream>
@@ -12,9 +88,38 @@
 #include "pi_controller.h"
 #include "sensor.h"
 
+/* The maximum number of states we think will occur in the simulation.
+ * We set this macro to ensure the arrays into which data is recored
+ * are large enough.
+ */
 #define N_STATES_IN_FLIGHT    1000
 
-
+/* run_simulation_routine is the function that performs the simulation
+ * of the vehicle's flight. When the simulation routine is called using
+ * the syntax described above, this function runs the simulation and
+ * passes results by reference back to mexFunction.
+ *
+ * Inputs:
+ * double *phys_consts
+ * double *init_conditions
+ * double *noise
+ * double *vehicle_params
+ * double *drag_model
+ * double *control_terms
+ * double *pred_params
+ *
+ * Outputs:
+ * double *pred_states
+ * double *actual_states
+ * double *obs_states
+ * double *controls
+ * double *apo_achieved
+ *
+ * Returns:
+ * None
+ *
+ * Each of these inputs is described in detail in the file header.
+ */
 void run_simulation_routine(double *phys_consts, double *init_conditions,
                 double *noise,
                 double *vehicle_params, double *drag_model,
@@ -24,6 +129,7 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
                 double *obs_states,double *controls,
                 double *apo_achieved)
 {   
+    /* input argument processing */
     double g = phys_consts[0];
     double ro = phys_consts[1];
     
@@ -38,7 +144,6 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
     double i = control_terms[1];
     
     double apo_goal = pred_params[0];
-    double dt = pred_params[1];
     
     double m = vehicle_params[0];
     double flap_width = vehicle_params[1];
@@ -55,19 +160,16 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
         }
     }
     
-    
-    
     /* ATS Library object instantiation */
+    
     LVD r = LVD(m, flap_width, body_rad, n_flaps,
                 drag_model_in,
                 g, ro,
-                apo_goal, dt);
+                apo_goal);
     
     pi_controller c = pi_controller(p, i, flap_length);
     
     sensor s = sensor();
-    
-    
     
     /* simulation data initialization */
     
@@ -109,34 +211,39 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
     int state_counter = 0;
     
     /* At this point, the ATS simulation loop starts. It will
-     continuously make predictions of apogee and enact control
-     on this prediction at time */
-
+     * continuously make predictions of apogee and enact control
+     * on this prediction at time */
     while(X_t->velocity > 0){
         
         /* we take advantage of the single step predict function
          * to simulate the next state of the launch vehicle
          * a time SAMPLE_T into the future
          */
-        for(int i = 0; i < lround(SAMPLE_T/dt); i++){
+        for(int i = 0; i < lround(SAMPLE_T/DT); i++){
             r.ss_predict(X_t, X_t, U_t);
         }
         
-        /* build the observed state taking noise into account and
-         * recognizing that velocity is calculated using the technique
-         * of finite differences
-         */
-        X_to->altitude = 
+        /* Build the observed state. Note that there is no raw
+         * value asssociated with the observed velocity because it
+         * is a calculated value, not a measured value */
+        
+        double raw_alt = 
         X_t->altitude + 
         X_t->altitude * inv_snr_alt * (2 * (double)rand()/RAND_MAX - 1);
         
-        X_to->velocity = s.get_vertical_speed(X_tm1o,
-        X_to->altitude, X_to->altitude, X_to->altitude, X_to->altitude);
-
-        X_to->theta = 
+        X_to->altitude = 
+        s.get_altitude(X_tm1o, raw_alt, raw_alt, raw_alt, raw_alt);
+        
+        double raw_theta = 
         X_t->theta + 
         X_t->theta * inv_snr_imu * (2 * (double)rand()/RAND_MAX - 1);
         
+        X_to->theta = s.get_polar_angle(raw_theta);
+        
+        X_to->velocity = 
+        s.get_vertical_speed(X_tm1o,
+        raw_alt, raw_alt, raw_alt, raw_alt);
+
         /* make a prediction of apogee based on control and observed 
          * state */
         r.ms_predict(X_to, X_tf, U_t);
@@ -177,10 +284,30 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
     delete X_t;
     delete X_tm1o;
     delete X_to;
-    
     delete e;
 }
 
+/* mexFunction is the gateway function to this file. When it is called 
+ * from a MATLAB script using the syntax described in the file header,
+ * it parses the input arguments and uses them to perform the simulation
+ * routine using the function run_simulation_routine. It then passes
+ * the results back to the caller.
+ *
+ *
+ * Inputs: 
+ * 
+ * mxArray *prhs[]: An array of mxArray pointers, which each 
+ * correspond to one of the input arguments as described in the file
+ * header
+ * 
+ * Outputs:
+ * mxArray *plhs[]: An array of mxArray pointers, which each
+ * corrspond to one of the output arguments as described in the 
+ * file header
+ *
+ * Returns: 
+ * None
+ */
 void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[])
 {
@@ -192,7 +319,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     double *drag_model = mxGetDoubles(prhs[4]);
     double *control_terms = mxGetDoubles(prhs[5]);
     double *pred_params = mxGetDoubles(prhs[6]);
-    
     
     /* prepare output data */
     plhs[0] = 
@@ -211,7 +337,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     double *controls = mxGetDoubles(plhs[3]);
     double *apogee_achieved = mxGetDoubles(plhs[4]);
     
-    /* call computational routine */
+    /* call computational routine, which sets the outputs */
     run_simulation_routine(phys_consts, init_conditions, 
                        noise,
                        vehicle_params, drag_model,

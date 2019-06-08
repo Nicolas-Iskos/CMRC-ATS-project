@@ -28,13 +28,17 @@ double sensor::get_altitude(state_t X_tm1, double a1, double a2, double a3, doub
 	return ((a1 + a2 + a3 + a4)/N_ALTIMETERS - offset);
 }
 
-double sensor::get_polar_angle(double t3_y, double t3_z){
-	t3_y = t3_y * M_PI/180;
-	t3_z = t3_z * M_PI/180;
+double sensor::get_polar_angle(double th_y, double th_z){
+	th_y = th_y * M_PI/180;
+	th_z = th_z * M_PI/180;
 
 	/** 
 	 * this function combines the Euler angles in y and z
 	 * to form the polar angle in radians
 	 */
-    return atan( sqrt(tan(t3_y)*tan(t3_y) + tan(t3_z)*tan(t3_z)) );
+    return atan( sqrt(tan(th_y)*tan(th_y) + tan(th_z)*tan(th_z)) );
+}
+
+double sensor::get_polar_angle(double th){
+	return th;
 }

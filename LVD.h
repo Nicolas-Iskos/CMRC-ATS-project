@@ -18,7 +18,7 @@ class LVD{
   private:
   double m, flap_width, body_rad, n_flaps;
   double g, ro, MATH_PI;
-  double apo_goal, dt;
+  double apo_goal;
 
   double drag_model[N_D_IMPACTORS][N_D_COEFF_TERMS];
 
@@ -32,7 +32,7 @@ class LVD{
   LVD(double m, double fin_width, double body_rad, double n_flaps,
       double drag_model[][N_D_COEFF_TERMS],
       double g, double ro,
-      double apo_goal, double dt);
+      double apo_goal);
 
   /**
    * computes the coefficient of the launch vehicle as a function

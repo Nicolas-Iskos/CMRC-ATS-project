@@ -67,17 +67,22 @@ class sensor{
   	double get_altitude(state_t X_tm1, double a1, double a2, double a3, double a4);
 
 	/**
-	 * Given the previous state along with the current raw value from each of the
-	 * 4 altimeters, this function returns the calculated polar angle.
+	 * This function returns the calculated polar angle.
 	 * The polar angle is the angle between the longitudinal axis of the
 	 * launch vehicle and the vertical direction.
 	 *
-	 * Inputs: t3_y : y Euler angle
-	 *				  z Euler angle
+	 * Inputs: th_y : y Euler angle in radians
+	 *				 th_z : z Euler angle in radians
 	 *
 	 * Outputs: calculated polar angle in radians
 	 */
-  	double get_polar_angle(double t3_y, double t3_z);
+  	double get_polar_angle(double th_y, double th_z);
+
+    /**
+     * This trivial polar angle calculation function is used to provide a uniform
+     * API in the case that polar angle is directly measurable.
+     */
+    double get_polar_angle(double th);
 
 };
 

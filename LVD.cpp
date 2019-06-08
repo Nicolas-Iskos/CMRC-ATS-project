@@ -6,9 +6,6 @@
  * X_t : current state including altitude, vertical velocity and attitude
  * X_tp : predicted state at some time into the future
  * U_t : current flap extension
- *
- * Units:
- * feet, slugs, seconds
  * 
  */
 
@@ -18,7 +15,7 @@
 LVD::LVD(double m_in, double flap_width_in, double body_rad_in, double n_flaps_in,
          double drag_model_in[][N_D_COEFF_TERMS],
          double g_in, double ro_in,
-         double apo_goal_in, double dt_in)
+         double apo_goal_in)
 {
     m = m_in;
     flap_width = flap_width_in;
@@ -37,7 +34,6 @@ LVD::LVD(double m_in, double flap_width_in, double body_rad_in, double n_flaps_i
     ro = ro_in;
 
     apo_goal = apo_goal_in;
-    dt = dt_in;
 }
 
 double LVD::compute_cd(state_t X_t, control_t U_t){
@@ -86,15 +82,15 @@ void LVD::ss_predict(state_t X_t, state_t X_tp, control_t U_t){
     double vx = vy * tan(theta);
     double h = X_t->altitude;
     
-    double dh = vy * dt;
+    double dh = vy * DT;
 
     double fd = compute_fd(X_t,U_t);
 
     // include force of drag and gravity
-    double dvy = (-g - cos(theta) * fd/m) * dt;
+    double dvy = (-g - cos(theta) * fd/m) * DT;
 
     // include force of drag
-    double dvx = (-sin(theta) * fd/m) * dt;
+    double dvx = (-sin(theta) * fd/m) * DT;
 
     double vy_p = vy + dvy;
     double vx_p = vx + dvx;
