@@ -1,4 +1,5 @@
-/* Overview:
+/**
+ *  Overview:
  *
  * The contents of this file are a simulation routine for the CMRC ATS
  * library. The simulation routine simulates the completion of one 
@@ -67,7 +68,7 @@
  * After the previous command calls the gateway function mexFunction with
  * the appropriate input arguments, the simulation function 
  * run_simulation_routine is called. This function performs the simulation
- * and returns its results to mexFunction. mexFunction then passes the
+ * and passes its results to mexFunction. mexFunction then passes the
  * results back to the MATLAB script that called simulation_routine. 
  * 
  * The repository's included file run_simulation.m gives an example of
@@ -100,25 +101,24 @@
  * passes results by reference back to mexFunction.
  *
  * Inputs:
- * double *phys_consts
- * double *init_conditions
- * double *noise
- * double *vehicle_params
- * double *drag_model
- * double *control_terms
- * double *pred_params
+ * double *phys_consts[in]
+ * double *init_conditions[in]
+ * double *noise[in]
+ * double *vehicle_params[in]
+ * double *drag_model[in]
+ * double *control_terms[in]
+ * double *pred_params[in]
+ *
+ * double *pred_states[out]
+ * double *actual_states[out]
+ * double *obs_states[out]
+ * double *controls[out]
+ * double *apo_achieved[out]
  *
  * Outputs:
- * double *pred_states
- * double *actual_states
- * double *obs_states
- * double *controls
- * double *apo_achieved
- *
- * Returns:
  * None
  *
- * Each of these inputs is described in detail in the file header.
+ * Each of these inputs andc outputs is described in detail in the file header.
  */
 void run_simulation_routine(double *phys_consts, double *init_conditions,
                 double *noise,
@@ -133,7 +133,7 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
     double g = phys_consts[0];
     double ro = phys_consts[1];
     
-	double v0 = init_conditions[0];
+    double v0 = init_conditions[0];
     double h0 = init_conditions[1];
     double th0 = init_conditions[2];
     
@@ -213,13 +213,14 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
     /* At this point, the ATS simulation loop starts. It will
      * continuously make predictions of apogee and enact control
      * on this prediction at time */
-    while(X_t->velocity > 0){
-        
+    while(X_t->velocity > 0)
+    {
         /* we take advantage of the single step predict function
          * to simulate the next state of the launch vehicle
          * a time SAMPLE_T into the future
          */
-        for(int i = 0; i < lround(SAMPLE_T/DT); i++){
+        for(int i = 0; i < lround(SAMPLE_T/DT); i++)
+        {
             r.ss_predict(X_t, X_t, U_t);
         }
         
@@ -296,16 +297,15 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
  *
  * Inputs: 
  * 
- * mxArray *prhs[]: An array of mxArray pointers, which each 
+ * mxArray *prhs[] [in]: An array of mxArray pointers, which each 
  * correspond to one of the input arguments as described in the file
  * header
  * 
- * Outputs:
- * mxArray *plhs[]: An array of mxArray pointers, which each
+ * mxArray *plhs[] [out]: An array of mxArray pointers, which each
  * corrspond to one of the output arguments as described in the 
  * file header
  *
- * Returns: 
+ * Outputs: 
  * None
  */
 void mexFunction(int nlhs, mxArray *plhs[],
@@ -346,7 +346,3 @@ void mexFunction(int nlhs, mxArray *plhs[],
                        obs_states, controls,
                        apogee_achieved);
 }
-
-
-
-

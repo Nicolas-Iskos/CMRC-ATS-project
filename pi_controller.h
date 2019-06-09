@@ -3,7 +3,8 @@
  * Each object contains values for the controller gains of a 
  * proportional-integral controller as well
  * as functions that can be used to determine the appropriate 
- * control for a given error.
+ * control for a given error. The control used throughout the ATS
+ * code is flap extension.
  *
  */
 
@@ -16,18 +17,24 @@
 #endif
 
 
-class pi_controller{
+class pi_controller
+{
+
 private:
-  // gain of proportional term
+    /* gain of proportional term */
     double p;
 
-  // gain of integral term
+    /* gain of integral term */
     double i;
 
+    
     /**
-     * Where d is flap extension:
-     * 
-     * angle = rt9 * d^9 + rt8 * d^8 + ... + rt1 * d + rt0
+     * In the case that a servo is used to rotate a mechanism
+     * which deploys the flaps, 
+     * when a dot product is taken between this vector
+     * and the first N_SERVO_COEFFS powers of the flap extension,
+     * the result is the servo angle in degrees 
+     * corresponding to that extension
      */
     double servo_ext_model[N_SERVO_COEFFS];
 
@@ -35,11 +42,15 @@ private:
 
 public:
     /**
-     * default constructor which builds a pi_controller object
-     * optimized for the CMRC SCOTTIE launch vehicle
+     * builds a pi_controller object for a vehicle that
+     * does not need to calculate servo extension
      */ 
     pi_controller(double p_in, double i_in, double flap_length_in);
 
+    /** 
+     * builds an object for a vehicle that does need to calculate
+     * servo extension
+     */
     pi_controller(double p_in, double i_in, double servo_ext_model_in[], 
                   double flap_length_in);
     /**
@@ -47,18 +58,16 @@ public:
      * in flap extension for a given error:
      *
      * Inputs:
-     * 	e : an array containing the instantaneous error
-     * 		as well as the accrued error over time
+     * e : an array containing the instantaneous error
+     * 	   as well as the accrued error over time
      * 
      * Outputs:
-     * 	The appropriate distance of flap extension
+     * The appropriate distance of flap extension
      */
     control_t get_control(error_t e);
     
     /**
-     * The CMRC SCOTTIE launch vehicle uses a servo 
-     * motor connected to a rotating turnpiece to deploy
-     * the airbrakes. This function returns the appropriate control
+     * This function returns the appropriate control
      * in servo angle for a given error:
      *
      * Inputs:
@@ -66,8 +75,8 @@ public:
      * 		as well as the accrued error over time
      * 
      * Outputs:
-     * 	The appropriate angle in degrees from which the servo must
-     * 	rotate, where 90 degees corresponds to flaps fully retracted
+     * The appropriate angle in degrees from which the servo must
+     * rotate
      */
     double get_theta(error_t e);
 
