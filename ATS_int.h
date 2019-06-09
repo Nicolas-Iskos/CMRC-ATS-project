@@ -44,19 +44,21 @@
 #define DT                 0.0208
 
 
-struct state {
-	double velocity;
-	double altitude;
-	double theta;
+struct state
+{
+    double velocity;
+    double altitude;
+    double theta;
 };
 
 typedef struct state* state_t;
 
-struct error {
-	/* instantenous error */
+struct error
+{
+    /* instantenous error */
     double inst;
     /* accumulated error */
-	double acc;
+    double acc;
 };
 
 typedef struct error* error_t;
