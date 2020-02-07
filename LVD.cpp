@@ -87,34 +87,66 @@ void LVD::ss_predict(state_t X_t, state_t X_tp, control_t U_t)
     double vx = vy * tan(theta);
     double h = X_t->altitude;
     
-    double dh = vy * DT;
+    double fd0 = compute_fd(X_t,U_t);
+    double ay0 = (g - cos(theta) * fd0/m);
+    double ax0 = (-sin(theta) * fd0/m);
 
-    double fd = compute_fd(X_t,U_t);
+    double dvy0 = ay0 * DT;
+    double dvx0 = ax0 * DT;
+    
+    state_t X_t_temp1 = new state;
+    X_t_temp1->velocity = vy + 0.5 * dvy0;
+    X_t_temp1->altitude = 0;
+    X_t_temp1->theta = atan((vx + 0.5 * dvx0)/(vy + 0.5 * dvy0));
+    
+    double theta1 = X_t_temp1->theta;
+    double fd1 = compute_fd(X_t_temp1, U_t);
+    double ay1 = g - cos(theta1) * (fd1/m);
+    double ax1 = -sin(theta1) * (fd1/m);
 
-    /** 
-     * change in vertical velocity over DT
-     * includes gravity and vertical component of force of drag
-     */
-    double dvy = (g - cos(theta) * fd/m) * DT;
+    double dvy1 = ay1 * DT;
+    double dvx1 = ax1 * DT;
+    
+    state_t X_t_temp2 = new state;
+    X_t_temp2->velocity = vy + 0.5 * dvy1;
+    X_t_temp2->altitude = 0;
+    X_t_temp2->theta = atan((vx + 0.5 * dvx1)/(vy + 0.5 * dvy1));;
 
-    /**
-     * change in horizontal velocity over DT
-     * includes horizontal component of force of drag
-     */
-    double dvx = (-sin(theta) * fd/m) * DT;
+    double theta2 = X_t_temp2->theta;
+    double fd2 = compute_fd(X_t_temp2, U_t);
+    double ay2 = g - cos(theta2) * (fd2/m);
+    double ax2 = -sin(theta2) * (fd2/m);
 
-    double vy_p = vy + dvy;
-    double vx_p = vx + dvx;
+    double dvy2 = ay2 * DT;
+    double dvx2 = ax2 * DT;
+    
+    state_t X_t_temp3 = new state;
+    X_t_temp3->velocity = vy + dvy2;
+    X_t_temp3->altitude = 0;
+    X_t_temp3->theta = atan((vx + dvx2)/(vy + dvy2));;
+    
+    double theta3 = X_t_temp3->theta;
+    double fd3 = compute_fd(X_t_temp3, U_t);
+    double ay3 = g - cos(theta3) * (fd3/m);
+    double ax3 = -sin(theta3) * (fd3/m);
+    
+    double dvy3 = ay3 * DT;
+    double dvx3 = ax3 * DT;
+    
+    double dvyp = (1./6) * (dvy0 + 2*dvy1 + 2*dvy2 + dvy3);
+    double dvxp = (1./6) * (dvx0 + 2*dvx1 + 2*dvx2 + dvx3);
+        
+    double vyp = vy + dvyp;
+    double vxp = vx + dvxp;
+    double hp = h + 0.5 * (vy + vyp) * DT;
 
-    /**
-     * By making the assumption that the forces on the 
-     * vehicle remain the same over DT, we can estimate
-     * the state DT into the future.
-     */
-
-    X_tp->velocity = vy_p;
-    X_tp->altitude = h + dh;
-    X_tp->theta = atan(vx_p/vy_p);
+    X_tp->velocity = vyp;
+    X_tp->altitude = hp;
+    X_tp->theta = atan((vx + dvxp)/(vy + dvyp));;
+    
+    delete X_t_temp1;
+    delete X_t_temp2;
+    delete X_t_temp3;
 }
 
 void LVD::ms_predict(state_t X_t, state_t X_tpf, control_t U_t)

@@ -12,10 +12,10 @@ feet, slugs, seconds
 % simulation parameters
 %%
 % [gravitational constant, air density]
-phys_consts = [32. 0.00237]; 
+phys_consts = [-32. 0.00237]; 
 
 % [initial velocity, initial altitude, initial polar angle]
-init_conditions = [600. 1100. 0.];
+init_conditions = [600. 1100. 0.1];
 
 % [inverse snr on altimeters, inverse snr on inertial measurement unit]
 noise = [0.000 0.000];
@@ -31,7 +31,7 @@ drag_model = [0.4298 0 0 0 0;
               0 0 0 0 0];
           
 % [proportional gain, integral gain]
-control_terms = [1e-5 2e-4];
+control_terms = [5e-5 4e-4];
 
 % target apogee
 pred_params = 5100;

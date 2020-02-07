@@ -219,7 +219,7 @@ void run_simulation_routine(double *phys_consts, double *init_conditions,
          * to simulate the next state of the launch vehicle
          * a time SAMPLE_T into the future
          */
-        for(int i = 0; i < lround(SAMPLE_T/DT); i++)
+        for(int i = 0; i < ceil(SAMPLE_T/DT); i++)
         {
             r.ss_predict(X_t, X_t, U_t);
         }

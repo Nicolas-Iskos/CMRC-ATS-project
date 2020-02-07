@@ -37,11 +37,15 @@
 
 #define N_ALTIMETERS       4
 
-/* state updating period */
-#define SAMPLE_T           0.104
 
+/* SAMPLE_T must be an integer multiple of DT for the simulation to work
+ * properly
+ **/
+
+/* state updating period */
+#define SAMPLE_T           0.200
 /* timestep used for numerical approximation of predicted state */
-#define DT                 0.0208
+#define DT                 0.100
 
 
 struct state
